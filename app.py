@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, join_room, leave_room, emit
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
+app.config['SERVER_NAME'] = '0.0.0.0:4000'
 socketio = SocketIO(app)
 
 # Store game state in memory (could use a database for persistence)
