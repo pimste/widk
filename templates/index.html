@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wat is de kans?</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <link rel="stylesheet" href="static/style.css">
+    <!-- fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 style="font-family: Bebas Neue, serif; font-style: normal; color: #F5902A; margin-bottom: -30px;">Wat is de kans?</h1>
+        <h2 style="font-family: Bebas Neue, serif; color: #F5902A;"><hr style="color: white;"> Battle Royale</h2>
+
+        <!-- Room Selection Section -->
+        <div id="room-selection-section">
+            <input type="text" id="room-input" placeholder="Spel naam:">
+            <button id="join-room-button">Neem deel aan een spel</button>
+        </div>
+
+        <!-- Set Odds Section -->
+        <div id="set-odds-section" style="display: none;">
+            <input type="number" id="odds-input" placeholder="Wat is de kans? (e.g., 10)">
+            <button id="set-odds-button">Bepaal de kans</button>
+        </div>
+
+        <!-- Submit Number Section -->
+        <div id="submit-number-section" style="display: none;">
+            <input type="number" id="number-input" placeholder="Kies een nummer">
+            <button id="submit-number-button" onclick="buttonClickWeg()">Weet je het zeker?</button>
+        </div>
+
+        <!-- Result Section -->
+        <div id="result-section" style="display: none;">
+            <h2 id="result-message"></h2>
+            <p id="matching-players"></p>
+            <button id="reset-button">Reset spel</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        const roomSelectionSection = document.getElementById('room-selection-section');
+        const setOddsSection = document.getElementById('set-odds-section');
+        const submitNumberSection = document.getElementById('submit-number-section');
+        const resultSection = document.getElementById('result-section');
+
+        const roomInput = document.getElementById('room-input');
+        const joinRoomButton = document.getElementById('join-room-button');
+
+        const oddsInput = document.getElementById('odds-input');
+        const setOddsButton = document.getElementById('set-odds-button');
+
+        const numberInput = document.getElementById('number-input');
+        const submitNumberButton = document.getElementById('submit-number-button');
+
+        const resultMessage = document.getElementById('result-message');
+        const matchingPlayers = document.getElementById('matching-players');
+        const resetButton = document.getElementById('reset-button');
+
+        let playerName = prompt("Wat is je bijnaam?");
+        let currentRoom = null;
+
+        // Join Room
+        joinRoomButton.addEventListener('click', () => {
+            const room = roomInput.value.trim();
+            if (room) {
+                currentRoom = room;
+                socket.emit('join_room', { room, player: playerName });
+                roomSelectionSection.style.display = 'none';
+                setOddsSection.style.display = 'block';
+            } else {
+                alert('Vul een echte spelnaam in');
+            }
+        });
+
+// Set Odds
+setOddsButton.addEventListener('click', () => {
+    const odds = parseInt(oddsInput.value);
+    if (!isNaN(odds) && odds > 0) {
+        socket.emit('set_odds', { room: currentRoom, odds });
+    } else {
+        alert('Vul alsjeblieft een correcte kans in');
+    }
+});
+
+// socket.on('odds_set', (data) => {
+//     if (data.error) {
+//         alert(data.message); // Show error message
+//     } else {
+//         alert(`De kans is ${data.odds}`);
+//         setOddsSection.style.display = 'none';
+//         submitNumberSection.style.display = 'block';
+//     }
+// });
+
+
+        // Submit Number
+        submitNumberButton.addEventListener('click', () => {
+            const number = parseInt(numberInput.value);
+            if (!isNaN(number) && number > 0) {
+                socket.emit('submit_number', { room: currentRoom, player: playerName, number });
+                buttonClickWeg();
+            } else {
+                alert('Vul alsjeblieft een juist nummer in');
+            }
+        });
+
+        // submit button verdwijn
+        function buttonClickWeg() {
+            var x = document.getElementById("submit-number-section");
+            if (x.style.display === "none") {
+                x.style.display = "block";
+            } else {
+                x.style.display = "none";
+            }
+        }
+
+        // Reset Game
+        resetButton.addEventListener('click', () => {
+            socket.emit('reset_game', { room: currentRoom });
+        });
+
+        // Socket Event Listeners
+        socket.on('room_joined', (data) => {
+            alert(`"${data.player}" heeft het spel "${data.room}" gejoined`);
+        });
+
+        socket.on('odds_set', (data) => {
+            if (data.error) {
+                alert(data.message);
+            } else {
+                alert(`De kans is 1 op ${data.odds}`);
+                setOddsSection.style.display = 'none';
+                submitNumberSection.style.display = 'block';
+            }
+        });
+
+        socket.on('result', (data) => {
+            if (data.result === 'match') {
+                resultMessage.textContent = 'Nummers matchen!';
+                matchingPlayers.textContent = `${data.players.join(' en ')} zijn de sjaak!`;
+            } else {
+                resultMessage.textContent = 'Oei, geen gelijke nummers. Volgende ronde!';
+                matchingPlayers.textContent = '';
+            }
+            submitNumberSection.style.display = 'none';
+            resultSection.style.display = 'block';
+        });
+
+        socket.on('game_reset', () => {
+            setOddsSection.style.display = 'block';
+            submitNumberSection.style.display = 'none';
+            resultSection.style.display = 'none';
+            oddsInput.value = '';
+            numberInput.value = '';
+        });
+
+        socket.on('player_left', (data) => {
+            alert(`${data.player} heeft de kamer verlaten: ${data.room}`);
+        });
+    </script>
+</body>
+</html>
