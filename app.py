@@ -6,8 +6,7 @@ app.config['SECRET_KEY'] = 'secret!'
 app.config['SERVER_NAME'] = '0.0.0.0:4000'
 socketio = SocketIO(app)
 
-# Store game state in memory (could use a database for persistence)
-rooms = {}  # Track game states per room
+rooms = {} 
 
 @app.route('/')
 def index():
@@ -56,14 +55,13 @@ def set_odds(data):
         current_odds = rooms[room]['current_odds']
         previous_odds = rooms[room]['previous_odds']
 
-        # Ensure odds cannot be higher than the previous round
         if odds > previous_odds and previous_odds != 0:
             emit('odds_set', {"error": True, "message": "De kans mag niet hoger zijn dan de vorige ronde."}, room=request.sid)
             return
 
-        rooms[room]['previous_odds'] = current_odds  # Update previous odds
+        rooms[room]['previous_odds'] = current_odds  
         rooms[room]['current_odds'] = odds
-        rooms[room]['player_numbers'] = {}  # Reset numbers for a new round
+        rooms[room]['player_numbers'] = {} 
         rooms[room]['result'] = None
         emit('odds_set', {"error": False, "odds": odds}, room=room)
 
@@ -82,7 +80,6 @@ def submit_number(data):
             players = list(game_state['player_numbers'].keys())
 
             if len(set(numbers)) < len(numbers):
-                # Find players with matching numbers
                 matches = [p for p in players if numbers.count(game_state['player_numbers'][p]) > 1]
                 game_state['result'] = {"result": "match", "players": matches}
             else:
@@ -95,11 +92,15 @@ def reset_game(data):
     room = data['room']
 
     if room in rooms:
-        rooms[room]['previous_odds'] = rooms[room]['current_odds']  # Retain the last odds as the previous odds
+        rooms[room]['previous_odds'] = rooms[room]['current_odds']  
         rooms[room]['current_odds'] = 0
         rooms[room]['player_numbers'] = {}
         rooms[room]['result'] = None
         emit('game_reset', {}, room=room)
 
+import os
+
 if __name__ == '__main__':
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+    port = int(os.environ.get('PORT', 4000))  # Default to 5000 for local testing
+    socketio.run(app, host='0.0.0.0', port=port, debug=True, allow_unsafe_werkzeug=True)
+
