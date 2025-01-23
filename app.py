@@ -6,6 +6,9 @@ app.config['SECRET_KEY'] = 'secret!'
 app.config['SERVER_NAME'] = '0.0.0.0:4000'
 socketio = SocketIO(app)
 
+if __name__ == '__main__':
+    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+
 rooms = {} 
 
 @app.route('/')
@@ -100,7 +103,5 @@ def reset_game(data):
 
 import os
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 4000))  # Default to 5000 for local testing
-    socketio.run(app, host='0.0.0.0', port=port, debug=True, allow_unsafe_werkzeug=True)
+
 

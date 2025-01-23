@@ -113,3 +113,5 @@ wheel==0.45.1
 wsproto==1.2.0
 xyzservices==2024.9.0
 zipp==3.21.0
+gunicorn 
+eventlet
