@@ -101,4 +101,4 @@ def reset_game(data):
         emit('game_reset', {}, room=room)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
