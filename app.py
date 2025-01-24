@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, jsonify
-from flask_socketio import SocketIO, join_room, leave_room, emit
 import eventlet
 eventlet.monkey_patch()
+
+from flask import Flask, render_template, request, jsonify
+from flask_socketio import SocketIO, join_room, leave_room, emit
 
 
 app = Flask(__name__)
