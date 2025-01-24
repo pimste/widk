@@ -7,11 +7,7 @@ from flask_socketio import SocketIO, join_room, leave_room, emit
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-app.config['SERVER_NAME'] = '0.0.0.0:4000'
 socketio = SocketIO(app)
-
-if __name__ == '__main__':
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
 
 rooms = {} 
 
@@ -107,5 +103,7 @@ def reset_game(data):
 
 import os
 
-
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 4000))  # Default to 4000
+    socketio.run(app, host='0.0.0.0', port=port, debug=True)
 
